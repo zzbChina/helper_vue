@@ -1,7 +1,7 @@
 <template>
   <div class="translate_main_panel">
       <!-- 菜单选择部分 -->
-      <div class="translate_menu">
+      <div class="translate_menu" v-if="status.show">
           <div class="chose_years">
               <div class="title">选择年份</div>
               <ul>
@@ -28,7 +28,7 @@
           </div>
       </div>
       <!-- 结果展示部分 -->
-      <div class="search_result">
+      <div class="search_result" v-if="status.show">
           <div class="detail_part">
               <div class="postImage">
                   <img :src="detail_translate.postImage" alt="">
@@ -38,7 +38,7 @@
               <div class="type">类型：{{detail_translate.type}}</div>
               <div class="level">等级：{{detail_translate.level}}</div>
               <!-- 翻译按钮 -->
-              <button>翻译</button>
+              <button @click="intoTranslatePanel">翻译</button>
           </div>
           <div class="result_items_box">
               <ul>
@@ -49,6 +49,11 @@
           </div>
           <div class="result_number">一共找到 {{translates.length}} 个结果</div>
       </div>
+
+      <router-view
+         :detail_translate='detail_translate'
+      />
+      
   </div>
 </template>
 
@@ -60,7 +65,6 @@ export default {
             years:['2021','2020','2019','2018','2017','更早'],
             types:['风景翻译','文化翻译','现象翻译','议论翻译','历史翻译','状物翻译'],
             levels:['大学四级','大学六级'],
-
             translates:[],
             detail_translate:{
                 postImage : '',
@@ -68,6 +72,9 @@ export default {
                 year : '',
                 type : '',
                 level : '',
+            },
+            status:{
+                show : true
             }
         }
     },
@@ -97,20 +104,61 @@ export default {
         //选择文章
         selectIt(id){
             this.detail_translate = this.translates[id]
-            this.detail_translate.postImage = require('../../assets/postImage/' + this.translates[id].postImage)
+            this.detail_translate.postImage = this.translates[id].postImage
+        },
+        //进入翻译面案
+        intoTranslatePanel(){
+            this.$router.push('/translate/translate_detail')
+        },
+        //更新detail翻译的数据
+        updateDetailTranslate(query){
+            this.detail_translate = query
+            this.detail_translate.postImage = require('../../assets/postImage/' + this.detail_translate.postImage)
         }
+    },
+    watch:{
+        $route(){
+            if(this.$route.path=="/translate/translate_detail"){
+                this.status.show = false
+            }else if(this.$route.path == "/translate"){
+                this.status.show = true
+            }
+        }
+    },
+    created(){
+        //如果可以获取保存的translatedetail数据，则就提取该数据
+        if (sessionStorage.getItem('detail_translate')) {
+            this.detail_translate = JSON.parse(sessionStorage.getItem('detail_translate'))
+        }
+        //在页面刷新时将vuex里的信息保存到sessionStorage里
+        window.addEventListener('beforeunload', () => {
+            sessionStorage.setItem('detail_translate', JSON.stringify(this.detail_translate));
+        });
+            
     },
     mounted(){
         //获取所有的翻译材料
         this.$http.get('/getAllTranslateMaterials').then(
             response=>{
-                console.log(response.data)
                 this.translates = response.data.data
+                this.translates.forEach((t)=>{
+                    t.postImage = require('../../assets/postImage/' + t.postImage)
+                })
+                if(this.$route.path == "/translate"){
+                    this.selectIt(0)
+                }
             },
             error=>{
                 console.log(error.message)
             }
         )
+        if(this.$route.path=="/translate/translate_detail"){
+                this.status.show = false
+        }
+
+        //修改被选中的detail翻译数据
+        this.$bus.$on('updateDetailTranslate',this.updateDetailTranslate)
+        
     }
 }
 </script>
@@ -191,6 +239,7 @@ export default {
         width: 1200px;
         height: 500px;
         margin: 20px 0 0 0;
+        user-select: none;
         box-shadow: 0 0 10px @lightblack;
         .detail_part{
             position: absolute; top: 20px; left: 20px;
@@ -270,11 +319,12 @@ export default {
                     box-shadow: 0 5px 20px rgb(87, 87, 87);
                 }
             }
-            ul::-webkit-scroll{
+            ul::-webkit-scrollbar{
                 width: 10px;
             }
-            ul::-webkit-scroll-theme{
-                background: #000;
+            ul::-webkit-scrollbar-thumb{
+                background: rgb(209, 124, 248);
+                border-radius: 5px;
             }
         }
         .result_number{

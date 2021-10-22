@@ -17,4 +17,9 @@ input,button{
 }
 button{
     cursor: pointer;
+    font-family: 'icomoon';
+}
+textarea{
+    border:0;
+    resize: none;
 }

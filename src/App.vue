@@ -7,14 +7,14 @@
       <div class="alert" v-show="alert.status">
         {{alert.info}}
       </div>
-      </transition>>
+      </transition>
 
       <!-- 提示框 -->
       <transition name="alert">
       <div class="prompt" v-show="prompt.status">
         {{prompt.info}}
       </div>
-      </transition>>
+      </transition>
     </div>
 </template>
 
@@ -65,7 +65,7 @@ export default {
 
 <style lang='less'>
 .alert,.prompt{
-  position: absolute; top: 30px; left: 50%;
+  position: fixed; top: 0px; left: 50%;
   width: 400px;
   height: 100px;
   text-align: center;
